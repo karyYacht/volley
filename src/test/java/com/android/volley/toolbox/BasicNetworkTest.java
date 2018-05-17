@@ -26,15 +26,12 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Cache.Entry;
 import com.android.volley.Header;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
-import com.android.volley.ServerError;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.mock.MockHttpStack;
 import java.io.ByteArrayInputStream;

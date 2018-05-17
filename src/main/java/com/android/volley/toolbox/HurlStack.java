@@ -17,10 +17,11 @@
 package com.android.volley.toolbox;
 
 import android.support.annotation.VisibleForTesting;
-import com.android.volley.AuthFailureError;
+
 import com.android.volley.Header;
 import com.android.volley.Request;
 import com.android.volley.Request.Method;
+
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,10 +31,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
-/** An {@link HttpStack} based on {@link HttpURLConnection}. */
+/** based on {@link HttpURLConnection}. */
 public class HurlStack extends BaseHttpStack {
 
     private static final int HTTP_CONTINUE = 100;
@@ -70,7 +72,7 @@ public class HurlStack extends BaseHttpStack {
 
     @Override
     public HttpResponse executeRequest(Request<?> request, Map<String, String> additionalHeaders)
-            throws IOException, AuthFailureError {
+            throws IOException {
         String url = request.getUrl();
         HashMap<String, String> map = new HashMap<>();
         map.putAll(request.getHeaders());
@@ -191,13 +193,13 @@ public class HurlStack extends BaseHttpStack {
 
     @SuppressWarnings("deprecation")
     /* package */ static void setConnectionParametersForRequest(
-            HttpURLConnection connection, Request<?> request) throws IOException, AuthFailureError {
+            HttpURLConnection connection, Request<?> request) throws IOException {
         switch (request.getMethod()) {
             case Method.DEPRECATED_GET_OR_POST:
                 // This is the deprecated way that needs to be handled for backwards compatibility.
                 // If the request's post body is null, then the assumption is that the request is
                 // GET.  Otherwise, it is assumed that the request is a POST.
-                byte[] postBody = request.getPostBody();
+                byte[] postBody = request.getBody();
                 if (postBody != null) {
                     connection.setRequestMethod("POST");
                     addBody(connection, request, postBody);
@@ -238,7 +240,7 @@ public class HurlStack extends BaseHttpStack {
     }
 
     private static void addBodyIfExists(HttpURLConnection connection, Request<?> request)
-            throws IOException, AuthFailureError {
+            throws IOException {
         byte[] body = request.getBody();
         if (body != null) {
             addBody(connection, request, body);
@@ -246,7 +248,7 @@ public class HurlStack extends BaseHttpStack {
     }
 
     private static void addBody(HttpURLConnection connection, Request<?> request, byte[] body)
-            throws IOException, AuthFailureError {
+            throws IOException {
         // Prepare output. There is no need to set Content-Length explicitly,
         // since this is handled by HttpURLConnection using the size of the prepared
         // output stream.

@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.android.volley.mock.ShadowSystemClock;
-import com.android.volley.toolbox.NoCache;
 import com.android.volley.utils.ImmediateResponseDelivery;
 import org.junit.Before;
 import org.junit.Test;

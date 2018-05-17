@@ -22,12 +22,12 @@ import android.graphics.BitmapFactory;
 import android.support.annotation.GuardedBy;
 import android.support.annotation.VisibleForTesting;
 import android.widget.ImageView.ScaleType;
+
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
-import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.VolleyLog;
+import com.android.volley.VolleyError;
 
 /** A canned request for getting an image at a given URL and calling back with a decoded Bitmap. */
 public class ImageRequest extends Request<Bitmap> {
@@ -182,8 +182,8 @@ public class ImageRequest extends Request<Bitmap> {
             try {
                 return doParse(response);
             } catch (OutOfMemoryError e) {
-                VolleyLog.e("Caught OOM for %d byte image, url=%s", response.data.length, getUrl());
-                return Response.error(new ParseError(e));
+//                VolleyLog.e("Caught OOM for %d byte image, url=%s", response.data.length, getUrl());
+                return Response.error(new VolleyError(e));
             }
         }
     }
@@ -231,9 +231,9 @@ public class ImageRequest extends Request<Bitmap> {
         }
 
         if (bitmap == null) {
-            return Response.error(new ParseError(response));
+            return Response.error(new VolleyError(response));
         } else {
-            return Response.success(bitmap, HttpHeaderParser.parseCacheHeaders(response));
+            return Response.success(bitmap);
         }
     }
 

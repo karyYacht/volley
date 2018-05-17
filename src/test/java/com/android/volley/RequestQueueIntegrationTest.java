@@ -27,7 +27,6 @@ import com.android.volley.Request.Priority;
 import com.android.volley.RequestQueue.RequestFinishedListener;
 import com.android.volley.mock.MockRequest;
 import com.android.volley.mock.ShadowSystemClock;
-import com.android.volley.toolbox.NoCache;
 import com.android.volley.utils.ImmediateResponseDelivery;
 import org.junit.Before;
 import org.junit.Test;

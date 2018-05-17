@@ -16,7 +16,6 @@
 
 package com.android.volley.utils;
 
-import com.android.volley.Cache;
 import java.util.Random;
 
 public class CacheTestUtils {

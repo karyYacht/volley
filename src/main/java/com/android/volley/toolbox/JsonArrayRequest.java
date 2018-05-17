@@ -17,10 +17,11 @@
 package com.android.volley.toolbox;
 
 import com.android.volley.NetworkResponse;
-import com.android.volley.ParseError;
 import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
+import com.android.volley.VolleyError;
+
 import java.io.UnsupportedEncodingException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -71,11 +72,11 @@ public class JsonArrayRequest extends JsonRequest<JSONArray> {
                             response.data,
                             HttpHeaderParser.parseCharset(response.headers, PROTOCOL_CHARSET));
             return Response.success(
-                    new JSONArray(jsonString), HttpHeaderParser.parseCacheHeaders(response));
+                    new JSONArray(jsonString));
         } catch (UnsupportedEncodingException e) {
-            return Response.error(new ParseError(e));
+            return Response.error(new VolleyError(e));
         } catch (JSONException je) {
-            return Response.error(new ParseError(je));
+            return Response.error(new VolleyError(je));
         }
     }
 }

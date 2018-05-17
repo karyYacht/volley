@@ -18,6 +18,7 @@ package com.android.volley;
 
 import android.os.Handler;
 import android.os.Looper;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -49,17 +50,11 @@ public class RequestQueue {
      */
     private final Set<Request<?>> mCurrentRequests = new HashSet<>();
 
-    /** The cache triage queue. */
-    private final PriorityBlockingQueue<Request<?>> mCacheQueue = new PriorityBlockingQueue<>();
-
     /** The queue of requests that are actually going out to the network. */
     private final PriorityBlockingQueue<Request<?>> mNetworkQueue = new PriorityBlockingQueue<>();
 
     /** Number of network request dispatcher threads to start. */
     private static final int DEFAULT_NETWORK_THREAD_POOL_SIZE = 4;
-
-    /** Cache interface for retrieving and storing responses. */
-    private final Cache mCache;
 
     /** Network interface for performing requests. */
     private final Network mNetwork;
@@ -70,22 +65,16 @@ public class RequestQueue {
     /** The network dispatchers. */
     private final NetworkDispatcher[] mDispatchers;
 
-    /** The cache dispatcher. */
-    private CacheDispatcher mCacheDispatcher;
-
     private final List<RequestFinishedListener> mFinishedListeners = new ArrayList<>();
 
     /**
      * Creates the worker pool. Processing will not begin until {@link #start()} is called.
      *
-     * @param cache A Cache to use for persisting responses to disk
      * @param network A Network interface for performing HTTP requests
      * @param threadPoolSize Number of network dispatcher threads to create
      * @param delivery A ResponseDelivery interface for posting responses and errors
      */
-    public RequestQueue(
-            Cache cache, Network network, int threadPoolSize, ResponseDelivery delivery) {
-        mCache = cache;
+    public RequestQueue(Network network, int threadPoolSize, ResponseDelivery delivery) {
         mNetwork = network;
         mDispatchers = new NetworkDispatcher[threadPoolSize];
         mDelivery = delivery;
@@ -94,14 +83,11 @@ public class RequestQueue {
     /**
      * Creates the worker pool. Processing will not begin until {@link #start()} is called.
      *
-     * @param cache A Cache to use for persisting responses to disk
      * @param network A Network interface for performing HTTP requests
      * @param threadPoolSize Number of network dispatcher threads to create
      */
-    public RequestQueue(Cache cache, Network network, int threadPoolSize) {
-        this(
-                cache,
-                network,
+    public RequestQueue(Network network, int threadPoolSize) {
+        this(   network,
                 threadPoolSize,
                 new ExecutorDelivery(new Handler(Looper.getMainLooper())));
     }
@@ -109,24 +95,20 @@ public class RequestQueue {
     /**
      * Creates the worker pool. Processing will not begin until {@link #start()} is called.
      *
-     * @param cache A Cache to use for persisting responses to disk
      * @param network A Network interface for performing HTTP requests
      */
-    public RequestQueue(Cache cache, Network network) {
-        this(cache, network, DEFAULT_NETWORK_THREAD_POOL_SIZE);
+    public RequestQueue(Network network) {
+        this(network, DEFAULT_NETWORK_THREAD_POOL_SIZE);
     }
 
     /** Starts the dispatchers in this queue. */
     public void start() {
         stop(); // Make sure any currently running dispatchers are stopped.
-        // Create the cache dispatcher and start it.
-        mCacheDispatcher = new CacheDispatcher(mCacheQueue, mNetworkQueue, mCache, mDelivery);
-        mCacheDispatcher.start();
 
         // Create network dispatchers (and corresponding threads) up to the pool size.
         for (int i = 0; i < mDispatchers.length; i++) {
             NetworkDispatcher networkDispatcher =
-                    new NetworkDispatcher(mNetworkQueue, mNetwork, mCache, mDelivery);
+                    new NetworkDispatcher(mNetworkQueue, mNetwork, mDelivery);
             mDispatchers[i] = networkDispatcher;
             networkDispatcher.start();
         }
@@ -134,9 +116,6 @@ public class RequestQueue {
 
     /** Stops the cache and network dispatchers. */
     public void stop() {
-        if (mCacheDispatcher != null) {
-            mCacheDispatcher.quit();
-        }
         for (final NetworkDispatcher mDispatcher : mDispatchers) {
             if (mDispatcher != null) {
                 mDispatcher.quit();
@@ -147,11 +126,6 @@ public class RequestQueue {
     /** Gets a sequence number. */
     public int getSequenceNumber() {
         return mSequenceGenerator.incrementAndGet();
-    }
-
-    /** Gets the {@link Cache} instance being used. */
-    public Cache getCache() {
-        return mCache;
     }
 
     /**
@@ -209,14 +183,13 @@ public class RequestQueue {
 
         // Process requests in the order they are added.
         request.setSequence(getSequenceNumber());
-        request.addMarker("add-to-queue");
 
         // If the request is uncacheable, skip the cache queue and go straight to the network.
-        if (!request.shouldCache()) {
-            mNetworkQueue.add(request);
-            return request;
-        }
-        mCacheQueue.add(request);
+//        if (!request.shouldCache()) {
+//            mNetworkQueue.add(request);
+//            return request;
+//        }
+        mNetworkQueue.add(request);
         return request;
     }
 

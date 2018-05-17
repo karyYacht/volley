@@ -17,6 +17,7 @@
 package com.android.volley;
 
 import android.os.Handler;
+
 import java.util.concurrent.Executor;
 
 /** Delivers responses and errors. */
@@ -57,13 +58,11 @@ public class ExecutorDelivery implements ResponseDelivery {
     @Override
     public void postResponse(Request<?> request, Response<?> response, Runnable runnable) {
         request.markDelivered();
-        request.addMarker("post-response");
         mResponsePoster.execute(new ResponseDeliveryRunnable(request, response, runnable));
     }
 
     @Override
     public void postError(Request<?> request, VolleyError error) {
-        request.addMarker("post-error");
         Response<?> response = Response.error(error);
         mResponsePoster.execute(new ResponseDeliveryRunnable(request, response, null));
     }
@@ -106,9 +105,7 @@ public class ExecutorDelivery implements ResponseDelivery {
 
             // If this is an intermediate response, add a marker, otherwise we're done
             // and the request can be finished.
-            if (mResponse.intermediate) {
-                mRequest.addMarker("intermediate-response");
-            } else {
+            if (!mResponse.intermediate) {
                 mRequest.finish("done");
             }
 

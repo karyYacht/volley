@@ -27,7 +27,7 @@ import android.accounts.AuthenticatorException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import com.android.volley.AuthFailureError;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

@@ -18,12 +18,10 @@ package com.android.volley;
 
 import android.net.TrafficStats;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.CallSuper;
 import android.support.annotation.GuardedBy;
 import android.text.TextUtils;
-import com.android.volley.VolleyLog.MarkerLog;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Collections;
@@ -61,9 +59,6 @@ public abstract class Request<T> implements Comparable<Request<T>> {
         /** Callback when request returns from network without valid response. */
         void onNoUsableResponseReceived(Request<?> request);
     }
-
-    /** An event log tracing the lifetime of this request; for debugging. */
-    private final MarkerLog mEventLog = MarkerLog.ENABLED ? new MarkerLog() : null;
 
     /**
      * Request method of this request. Currently supports GET, POST, PUT, DELETE, HEAD, OPTIONS,
@@ -107,13 +102,6 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     /** The retry policy for this request. */
     private RetryPolicy mRetryPolicy;
 
-    /**
-     * When a request can be retrieved from cache but must be refreshed from the network, the cache
-     * entry will be stored here so that in the event of a "Not Modified" response, we can be sure
-     * it hasn't been evicted from cache.
-     */
-    private Cache.Entry mCacheEntry = null;
-
     /** An opaque token tagging this request; used for bulk cancellation. */
     private Object mTag;
 
@@ -143,6 +131,7 @@ public abstract class Request<T> implements Comparable<Request<T>> {
         mMethod = method;
         mUrl = url;
         mErrorListener = listener;
+
         setRetryPolicy(new DefaultRetryPolicy());
 
         mDefaultTrafficStatsTag = findDefaultTrafficStatsTag(url);
@@ -209,13 +198,6 @@ public abstract class Request<T> implements Comparable<Request<T>> {
         return this;
     }
 
-    /** Adds an event to this request's event log; for debugging. */
-    public void addMarker(String tag) {
-        if (MarkerLog.ENABLED) {
-            mEventLog.add(tag, Thread.currentThread().getId());
-        }
-    }
-
     /**
      * Notifies the request queue that this request has finished (successfully or with error).
      *
@@ -224,26 +206,6 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     void finish(final String tag) {
         if (mRequestQueue != null) {
             mRequestQueue.finish(this);
-        }
-        if (MarkerLog.ENABLED) {
-            final long threadId = Thread.currentThread().getId();
-            if (Looper.myLooper() != Looper.getMainLooper()) {
-                // If we finish marking off of the main thread, we need to
-                // actually do it on the main thread to ensure correct ordering.
-                Handler mainThread = new Handler(Looper.getMainLooper());
-                mainThread.post(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                mEventLog.add(tag, threadId);
-                                mEventLog.finish(Request.this.toString());
-                            }
-                        });
-                return;
-            }
-
-            mEventLog.add(tag, threadId);
-            mEventLog.finish(this.toString());
         }
     }
 
@@ -287,22 +249,6 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     }
 
     /**
-     * Annotates this request with an entry retrieved for it from cache. Used for cache coherency
-     * support.
-     *
-     * @return This Request object to allow for chaining.
-     */
-    public Request<?> setCacheEntry(Cache.Entry entry) {
-        mCacheEntry = entry;
-        return this;
-    }
-
-    /** Returns the annotated cache entry, or null if there isn't one. */
-    public Cache.Entry getCacheEntry() {
-        return mCacheEntry;
-    }
-
-    /**
      * Mark this request as canceled.
      *
      * <p>No callback will be delivered as long as either:
@@ -333,84 +279,18 @@ public abstract class Request<T> implements Comparable<Request<T>> {
     }
 
     /**
-     * Returns a list of extra HTTP headers to go along with this request. Can throw {@link
-     * AuthFailureError} as authentication may be required to provide these values.
-     *
-     * @throws AuthFailureError In the event of auth failure
+     * Returns a list of extra HTTP headers to go along with this request.
      */
-    public Map<String, String> getHeaders() throws AuthFailureError {
+    public Map<String, String> getHeaders(){
         return Collections.emptyMap();
     }
 
     /**
-     * Returns a Map of POST parameters to be used for this request, or null if a simple GET should
-     * be used. Can throw {@link AuthFailureError} as authentication may be required to provide
-     * these values.
-     *
-     * <p>Note that only one of getPostParams() and getPostBody() can return a non-null value.
-     *
-     * @throws AuthFailureError In the event of auth failure
-     * @deprecated Use {@link #getParams()} instead.
-     */
-    @Deprecated
-    protected Map<String, String> getPostParams() throws AuthFailureError {
-        return getParams();
-    }
-
-    /**
-     * Returns which encoding should be used when converting POST parameters returned by {@link
-     * #getPostParams()} into a raw POST body.
-     *
-     * <p>This controls both encodings:
-     *
-     * <ol>
-     *   <li>The string encoding used when converting parameter names and values into bytes prior to
-     *       URL encoding them.
-     *   <li>The string encoding used when converting the URL encoded parameters into a raw byte
-     *       array.
-     * </ol>
-     *
-     * @deprecated Use {@link #getParamsEncoding()} instead.
-     */
-    @Deprecated
-    protected String getPostParamsEncoding() {
-        return getParamsEncoding();
-    }
-
-    /** @deprecated Use {@link #getBodyContentType()} instead. */
-    @Deprecated
-    public String getPostBodyContentType() {
-        return getBodyContentType();
-    }
-
-    /**
-     * Returns the raw POST body to be sent.
-     *
-     * @throws AuthFailureError In the event of auth failure
-     * @deprecated Use {@link #getBody()} instead.
-     */
-    @Deprecated
-    public byte[] getPostBody() throws AuthFailureError {
-        // Note: For compatibility with legacy clients of volley, this implementation must remain
-        // here instead of simply calling the getBody() function because this function must
-        // call getPostParams() and getPostParamsEncoding() since legacy clients would have
-        // overridden these two member functions for POST requests.
-        Map<String, String> postParams = getPostParams();
-        if (postParams != null && postParams.size() > 0) {
-            return encodeParameters(postParams, getPostParamsEncoding());
-        }
-        return null;
-    }
-
-    /**
-     * Returns a Map of parameters to be used for a POST or PUT request. Can throw {@link
-     * AuthFailureError} as authentication may be required to provide these values.
-     *
+     * Returns a Map of parameters to be used for a POST or PUT request.
      * <p>Note that you can directly override {@link #getBody()} for custom data.
      *
-     * @throws AuthFailureError in the event of auth failure
      */
-    protected Map<String, String> getParams() throws AuthFailureError {
+    protected Map<String, String> getParams(){
         return null;
     }
 
@@ -442,10 +322,8 @@ public abstract class Request<T> implements Comparable<Request<T>> {
      * <p>By default, the body consists of the request parameters in
      * application/x-www-form-urlencoded format. When overriding this method, consider overriding
      * {@link #getBodyContentType()} as well to match the new body format.
-     *
-     * @throws AuthFailureError in the event of auth failure
      */
-    public byte[] getBody() throws AuthFailureError {
+    public byte[] getBody() {
         Map<String, String> params = getParams();
         if (params != null && params.size() > 0) {
             return encodeParameters(params, getParamsEncoding());
@@ -519,8 +397,7 @@ public abstract class Request<T> implements Comparable<Request<T>> {
 
     /**
      * Returns the socket timeout in milliseconds per retry attempt. (This value can be changed per
-     * retry attempt if a backoff is specified via backoffTimeout()). If there are no retry attempts
-     * remaining, this will cause delivery of a {@link TimeoutError} error.
+     * retry attempt if a backoff is specified via backoffTimeout()).
      */
     public final int getTimeoutMs() {
         return mRetryPolicy.getCurrentTimeout();

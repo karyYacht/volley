@@ -17,12 +17,13 @@
 package com.android.volley.toolbox;
 
 import android.support.annotation.GuardedBy;
+
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
-import com.android.volley.VolleyLog;
+
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -48,17 +49,9 @@ public abstract class JsonRequest<T> extends Request<T> {
     private final String mRequestBody;
 
     /**
-     * Deprecated constructor for a JsonRequest which defaults to GET unless {@link #getPostBody()}
-     * or {@link #getPostParams()} is overridden (which defaults to POST).
-     *
-     * @deprecated Use {@link #JsonRequest(int, String, String, Listener, ErrorListener)}.
+     * Deprecated constructor for a JsonRequest which defaults to GET unless {@link #getBody()}
+     * or {@link #getParams()} is overridden (which defaults to POST).
      */
-    @Deprecated
-    public JsonRequest(
-            String url, String requestBody, Listener<T> listener, ErrorListener errorListener) {
-        this(Method.DEPRECATED_GET_OR_POST, url, requestBody, listener, errorListener);
-    }
-
     public JsonRequest(
             int method,
             String url,
@@ -92,20 +85,6 @@ public abstract class JsonRequest<T> extends Request<T> {
     @Override
     protected abstract Response<T> parseNetworkResponse(NetworkResponse response);
 
-    /** @deprecated Use {@link #getBodyContentType()}. */
-    @Deprecated
-    @Override
-    public String getPostBodyContentType() {
-        return getBodyContentType();
-    }
-
-    /** @deprecated Use {@link #getBody()}. */
-    @Deprecated
-    @Override
-    public byte[] getPostBody() {
-        return getBody();
-    }
-
     @Override
     public String getBodyContentType() {
         return PROTOCOL_CONTENT_TYPE;
@@ -116,9 +95,9 @@ public abstract class JsonRequest<T> extends Request<T> {
         try {
             return mRequestBody == null ? null : mRequestBody.getBytes(PROTOCOL_CHARSET);
         } catch (UnsupportedEncodingException uee) {
-            VolleyLog.wtf(
-                    "Unsupported Encoding while trying to get the bytes of %s using %s",
-                    mRequestBody, PROTOCOL_CHARSET);
+//            VolleyLog.wtf(
+//                    "Unsupported Encoding while trying to get the bytes of %s using %s",
+//                    mRequestBody, PROTOCOL_CHARSET);
             return null;
         }
     }

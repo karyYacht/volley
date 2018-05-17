@@ -17,11 +17,13 @@
 package com.android.volley.toolbox;
 
 import android.support.annotation.GuardedBy;
+
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
+
 import java.io.UnsupportedEncodingException;
 
 /** A canned request for retrieving the response body at a given URL as a String. */
@@ -89,6 +91,6 @@ public class StringRequest extends Request<String> {
             // So suppress the warning instead.
             parsed = new String(response.data);
         }
-        return Response.success(parsed, HttpHeaderParser.parseCacheHeaders(response));
+        return Response.success(parsed);
     }
 }

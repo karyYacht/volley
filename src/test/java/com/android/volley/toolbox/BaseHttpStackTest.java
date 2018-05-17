@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.Header;
 import com.android.volley.Request;
 import com.android.volley.mock.TestRequest;
